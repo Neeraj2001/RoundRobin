@@ -1,123 +1,149 @@
-#include <stdio.h>
-#define MAX_QUEUE_SIZE 100
-typedef struct Processes {
-	int p_no;
-	int arr_time;
-	int burst_time;
-} Process;
-Process * queue[MAX_QUEUE_SIZE];
-int front = 0, rear = -1, processed = 0, curr_time = 0, tq = 6;
-int last_front = 0, last_rear = -1;
-void swap(Process * a, Process * b) {
-	Process temp = * a;
-	* a = * b;
-	* b = temp;
-}
-void sort(Process p[], int n) {
-	int i, j;
-	short swapped;	
-	for (i = 0; i < n; ++i) {
-		swapped = 0;
-		for (j = 0; j < n-i-1; ++j)
-		{
-			if (p[j].arr_time > p[j+1].arr_time)
-			{
-				swap(&p[j], &p[j+1]);
-				swapped = 1;
-			}
-		}
-		if (swapped == 0)
-			break;
-	}
-}
-void enqueue(Process p[], int n) {
-	int i, j, can_insert;
-	for (i = 0; i < n; ++i)
+#include<stdio.h>
+#include<conio.h>
+
+void rr(int no,int remt[10],int Cur_t,int arT[10], int bsT[10]);
+
+main()
+{
+	int Proc_no,j,no,CurT,RemProc,time_quan;
+	int arT[10],bsT[10],remt[10];
+	int x=1,indicator = 0,wait = 0,tut = 0;
+	printf("Enter number of processes ");
+	scanf("%d",&no);
+	if(no <=0)
+    {
+        printf(" No of Processes should not be 0");
+        return 0;
+    }
+	RemProc = no;
+
+	printf("\nEnter the Arrival Time and Burst Time of the processes\n");
+	for(Proc_no = 0;Proc_no < no;Proc_no++)
 	{
-		can_insert = 1;
-		
-		if (p[i].arr_time <= curr_time && p[i].burst_time > 0)
-		{
-			if (front == 0) {
-				queue[++rear] = &p[i];
-			}
-			else
-			{
-				for (j = last_front; j <= last_rear; ++j) {
-					if (queue[j]->p_no == p[i].p_no)
-						can_insert = 0;
-				}
-				if (can_insert == 1)
-					queue[++rear] = &p[i];
-			}
-		}
+		printf("\nProcess P%d\n",Proc_no+1);
+		printf("Arrival time = ");
+		scanf("%d",&arT[Proc_no]);
+		if(arT[Proc_no]<0)
+        {
+            printf("Arrival Time Should not be -ve");
+            return 0;
+        }
+		printf("Burst time = ");
+		scanf("%d",&bsT[Proc_no]);
+		if(bsT[Proc_no]<=0)
+        {
+            printf("Burst Time Should not be 0 or -ve");
+            return 0;
+        }
+		remt[Proc_no]=bsT[Proc_no];
 	}
-	for (i = last_front; i <= last_rear; ++i)
+	printf("The details of Time Quantum are as follows:\n");
+	printf("The Time Quantum for first round is 6.\n");
+	time_quan=3;
+	CurT=0;
+	for(Proc_no=0;RemProc!=0;)
 	{
-		if (queue[i]->burst_time > 0)
-			queue[++rear] = queue[i];
-	}
-}
-void execute() {
-	int i;
-	
-	if (front-1 == rear) {
-		printf("CPU idle for 1 second.\n");
-		curr_time += 1;
-	}
-	else {
-		last_front = front;
-		last_rear = rear;		
-		for (i = front; i <= rear; ++i, ++front)
+		if(remt[Proc_no]<=time_quan && remt[Proc_no]>0)
 		{
-			if (queue[i]->burst_time > tq)
-			{
-				queue[i]->burst_time -= tq;
-				curr_time += tq;
-				printf("Process number %d excuted till %d seconds.\n", queue[i]->p_no, curr_time);
+			CurT+=remt[Proc_no];
+			remt[Proc_no]=0;
+			indicator=1;
+		}
+		else if(remt[Proc_no]>0)
+		{
+			remt[Proc_no]-=time_quan;
+			CurT+=time_quan;
+		}
+		if(remt[Proc_no]==0 && indicator==1)
+		{ printf("%d",Proc_no);
+			RemProc--;
+			printf("P %d",Proc_no+1);
+			printf("\t\t\t%d",CurT-arT[Proc_no]);
+			printf("\t\t\t%d\n",CurT-bsT[Proc_no]-arT[Proc_no]);
+			wait+=CurT-arT[Proc_no]-bsT[Proc_no];
+			tut+=CurT-arT[Proc_no];
+			indicator=0;
+
+		}
+		if(Proc_no==no-1){
+			x++;
+			if(x==2){
+				Proc_no=0;
+				time_quan=6;
+
+				printf("The Time Quantum for Second round is 10. \n");
 			}
-			else if (queue[i]->burst_time > 0)
-			{
-				curr_time += queue[i]->burst_time;
-				queue[i]->burst_time = 0;
-				printf("Process number %d excuted till %d seconds.\n", queue[i]->p_no, curr_time);
-				++processed;
+			else{
+				break;
 			}
 		}
-	}
-}
-int main() {
-	int n, i;
-	short err_flag = 0;	
-	do {
-		if (err_flag == 1)
-			fprintf(stderr, "\nNumber of processes should be greater than 1.\n");
-		printf("Enter the number of processes: ");
-		scanf("%d", &n);
-		err_flag = 1;
-	} while (n < 1);
-	err_flag = 0;
-	Process p[n];
-	for (i = 0; i < n; ++i) {
-		printf("\n");
-		printf("Enter arrival time of process %d: ", i+1);
-		scanf("%d", &p[i].arr_time);
-		printf("Enter burst time of process %d: ", i+1);
-		scanf("%d", &p[i].burst_time);
-		p[i].p_no = i+1;
-	}
-	sort(&p[0], n); // Sort the processes according to the arrival time of each process.	
-	while (1) {
-		enqueue(p, n);
-		printf("\nIn queue: ");
-		for (i = 0; i <= rear; ++i) {
-			printf("%d ", queue[i]->p_no);
+		else if(CurT >= arT[Proc_no+1]){
+			Proc_no++;
 		}
-		printf("\nFront = %d, Rear = %d.\n\n", front, rear);
-		execute();
-		// If all the processes have been processed, break from the loop.
-		if (processed == n)
-			break;
+		else{
+			Proc_no=0;
+		}
 	}
+
+	rr(no,remt,CurT,arT,bsT);
+
 	return 0;
 }
+
+
+void rr(int no,int remt[10],int Cur_t,int arT[10], int bsT[10]){
+
+	float avg_wait,avg_tut;
+    int i,j,n=no,temp,btime[20],Proc_no[20],w_time[20],tut_t[20],total=0,loc;
+
+    printf("Third round with Greater burst time.\n");
+
+    for(i=0;i<n;i++)
+    {
+        btime[i]=remt[i];
+        w_time[i]=Cur_t-arT[i]-btime[i];
+		Proc_no[i]=i+1;
+    }
+
+    for(i=0;i<n;i++)
+    {
+        loc=i;
+        for(j=i+1;j<n;j++)
+        {
+            if(btime[j]>btime[loc]){
+            	loc=j;
+            }
+        }
+        temp=btime[i];
+        btime[i]=btime[loc];
+        btime[loc]=temp;
+        temp=Proc_no[i];
+        Proc_no[i]=Proc_no[loc];
+        Proc_no[loc]=temp;
+    }
+
+    for(i=1;i<n;i++)
+    {
+        for(j=0;j<i;j++){
+        	w_time[i]+=btime[j];
+        }
+        total+=w_time[i];
+    }
+
+    avg_wait=(float)total/n;
+    total=0;
+    printf("\nProcess\t\tBurst time\t\twaiting time\t\tTurnaround Time");
+    for(i=0;i<n;i++)
+    {
+        tut_t[i]=btime[i]+w_time[i];
+        total=total + tut_t[i];
+        printf("\nP%d\t\t\t%d\t\t\t%d\t\t\t%d",Proc_no[i],btime[i],w_time[i],tut_t[i]);
+    }
+    avg_tut=(float)total/n;
+    printf("\n\nAverage waiting time = %f",avg_wait);
+    printf("\nAverage turnaround time = %f\n",avg_tut);
+
+}
+
+
+
