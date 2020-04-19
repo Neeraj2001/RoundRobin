@@ -139,6 +139,7 @@ void rrobin(int no,int remt[10],int Cur_t,int AT[10], int BT[10]){
     avg_TAT=(float)total/n;
     printf("\n\nAverage Waiting Time = %f",avg_WT);
     printf("\nAverage Turnaround Time = %f\n",avg_TAT);
+	//by Neeraj
 
 }
 
